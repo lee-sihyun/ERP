@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="site.itwill.mapper.SpendingMapper">
+<insert id="insertSpending">
+	<selectKey resultType="int" keyProperty="draftNo" order="BEFORE">
+			select spending_seq.nextval from dual
+		</selectKey>
+		<!-- 지출결의서 작성생성 -->
+		insert into spending values(
+		#{draftNo},#{empNo},#{writer},sysdate,#{spendingDate },#{spendingTitle},#{spendingContent},#{spendingPrice}
+		,#{signerOne},0,#{signerTwo},0,#{signerThree},0,1)
+
+	</insert>
+	
+	
+	<!-- 지출결의서 전체 출력 -->
+	<select id="selectSpending" resultType="SpendingDTO">
+
+
+		select * from spending where emp_no=#{empNo} order by draft_no desc
+
+	</select>
+	
+	
+	<!-- 하나만 출력 -->
+	
+		<select id="selectSpendingTest" resultType="SpendingDTO">
+		select * from spending where draft_no=#{draftNo}
+	</select>
+	
+	
+	
+	
+		<select id="approve1" resultType="SpendingDTO">
+		<!--select * from draft where emp_no=#{empNo} and approve=1  -->
+		select * from spending where (signer_three=#{empNo} and approve=1) 
+		or (signer_two=#{empNo} and approve=2) 
+		or (signer_one=#{empNo} and approve=3)
+		order by draft_no desc 
+	</select>
+	
+	
+	<!--반려결재함 -->
+	<select id="reject" resultType="SpendingDTO">
+
+		select * from spending where approve=0 and emp_no=#{empNo} order by draft_no desc 
+		
+	</select>
+	
+	
+	
+	
+	
+	<!-- 결재  -->
+<update id="updateSignerOne">
+update spending 
+set approve=
+case
+when approve=1 
+then 2
+when approve=2 
+then 3
+when approve=3
+then 4
+end
+where draft_no=#{draftNo}	</update>
+
+
+	<!-- 반려 -->
+<update id="updateApproveReturn">
+   update spending 
+set approve=
+case
+when approve=1 and approve!=2 and approve!=3 and approve!=4
+then 0
+when approve=2 and approve!=3 and approve!=4 and approve!=4
+then 0
+when approve=3 and approve!=1 and approve!=2 and approve!=4
+then 0
+end
+where draft_no=#{draftNo}
+   </update>
+
+
+
+
+</mapper>

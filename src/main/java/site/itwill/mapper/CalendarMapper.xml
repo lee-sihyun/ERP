@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.CalendarMapper">
+	<resultMap type="Calendar" id="calendarResultMap">
+		<id column="cal_no" property="_id"/>
+		<result column="emp_no" property="username"/>
+		<result column="dept_no" property="deptNo"/>
+		<result column="cal_title" property="title"/>
+		<result column="cal_start_date" property="start"/>
+		<result column="cal_end_date" property="end"/>
+		<result column="cal_group" property="type"/>
+		<result column="cal_category" property="backgroundColor"/>
+		<result column="cal_place" property="textColor"/>
+		<result column="cal_content" property="description"/>
+	</resultMap>
+
+	<insert id="insertCalendar">
+		<selectKey keyProperty="_id" resultType="int" order="BEFORE">
+			select calendar_seq.nextval from dual
+		</selectKey>
+		insert into calendar values(#{_id},#{username},#{deptNo},#{title},
+			#{start},#{end},#{type},#{backgroundColor},#{textColor},#{description})
+	</insert>
+	
+	<insert id="insertSimpleCalendar">
+		<selectKey keyProperty="_id" resultType="int" order="BEFORE">
+			select calendar_seq.nextval from dual
+		</selectKey>
+		insert into calendar(cal_no,emp_no,dept_no,cal_title,cal_start_date,cal_end_date,cal_group) 
+			values(#{_id},#{username},#{deptNo},#{title},#{start},#{end},#{type})
+	</insert>
+	
+	<update id="updateCalendar">
+		update calendar set cal_title=#{title},cal_start_date=#{start},cal_end_date=#{end},
+			cal_group=#{type},cal_category=#{backgroundColor},cal_place=#{textColor},cal_content=#{description} 
+			where cal_no=#{_id}
+	</update>
+	
+	<select id="selectCalendar" resultType="Calendar" resultMap="calendarResultMap">
+		select * from calendar where cal_no=#{_id}
+	</select>
+	
+	<select id="selectAllCalendar" resultType="Calendar" resultMap="calendarResultMap">
+		select * from calendar
+	</select>
+	
+	<select id="selectTeamCalendar" resultType="Calendar" resultMap="calendarResultMap">
+		select * from calendar where dept_no=#{deptNo}
+	</select>
+	
+	<select id="selectMyCalendar" resultType="Calendar" resultMap="calendarResultMap">
+		select * from calendar where emp_no=#{username}
+	</select>
+	
+	<delete id="deleteCalendar">
+		delete from calendar where cal_no=#{_id}
+	</delete>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.AnnualMapper">
+	<insert id="insertAnnual">
+		<selectKey keyProperty="annualNo" resultType="int" order="BEFORE">
+			select annual_seq_no.nextval from dual
+		</selectKey>
+			insert into annual(annual_no, dept_no, emp_no, annual_status, annual_start, annual_end) values(#{annualNo}, #{deptNo}, #{empNo}, #{annualStatus}, #{annualStart}, #{annualEnd})
+	</insert>
+	
+	<!-- 연차 사용 -->
+	<update id="updateEmployee" parameterType="EmployeeDTO">
+		update employee set emp_break = (emp_break - #{empBreak}) where emp_no = #{empNo}
+	</update>
+	
+	<!-- <delete id="deleteAnnual">
+		delete from annual where annual_no = #{annualNo}
+	</delete> -->
+	
+	<delete id="deleteAnnual">
+		delete from annual where annual_no in 
+		<foreach collection="list" item="annualNo"  open="(" close=")" separator=",">		
+			#{annualNo}
+		</foreach>
+	</delete>
+	
+	<select id="selectAnnual" resultType="AnnualVO">
+		 select (select emp_Name from Employee E where A.emp_No = E.emp_No) empName,
+		 (select emp_break from Employee E where A.emp_No = E.emp_No) empBreak,
+         (select dept_Name from DepartMent D where A.dept_No = D.dept_No) deptName,
+         A.annual_start annualStart,
+         A.annual_end annualEnd,
+         A.annual_status annualStatus,
+         A.annual_no annualNo
+		 from Annual A where a.emp_no = #{empNo}
+	</select>
+	
+	<select id="selectAllAnnual" resultType="AnnualVO">
+		 select (select emp_Name from Employee E where A.emp_No = E.emp_No) empName,
+		 (select emp_break from Employee E where A.emp_No = E.emp_No) empBreak,
+         (select dept_Name from DepartMent D where A.dept_No = D.dept_No) deptName,
+         A.annual_start annualStart,
+         A.annual_end annualEnd,
+         A.annual_status annualStatus,
+         A.annual_no annualNo
+		 from Annual A order by annual_no desc
+	</select>
+</mapper>

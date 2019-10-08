@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.OutAddressMapper">
+	<!-- 
+	<resultMap type="OutAddressDTO" id="OutAddressResultMap">
+		<id column="ADDRESS_NO" property="addressNo"/>
+		<result column="DEPT_NAME" property="deptName"/>
+		<result column="ADDRESS_NAME" property="addressName"/>
+		<result column="ADDRESS_POSITION" property="addressPosition"/>
+		<result column="ADDRESS_EMAIL" property="addressEmail"/>
+		<result column="ADDRESS_PHONE" property="addressPhone"/>
+		<result column="COMPANY_NAME" property="companyName"/>
+		<result column="COMPANY_PHONE" property="companyPhone"/>
+		<result column="COMPANY_ADDRESS" property="companyAddress"/>
+		<result column="MEMO" property="memo"/>
+	</resultMap>	
+	 -->
+	<insert id="insertAddress" >
+		<selectKey resultType="int" keyProperty="addressNo" order="BEFORE">
+		 	select out_address_seq.nextval from dual
+		</selectKey>
+		insert into out_address_book values(
+		#{addressNo},#{empNo}, #{deptName}, #{addressName}, #{addressPosition} 
+		, #{addressEmail}, #{addressPhone}, #{companyName}, #{companyPhone}, #{companyAddress}, #{memo})
+	</insert>
+	
+
+	<!-- 주소록번호를 전달받아 OutAddress 테이블에 저장된 주소록정보를 검색하여 반환하는 메소드 -->
+	<select id="selectAddress" resultType="OutAddressDTO">
+		select * from out_address_book where ADDRESS_NO=#{addressNo}
+	</select>
+	
+
+	<!-- 주소록번호를 전달받아 OutAddress 테이블에 저장된 주소록정보를 삭제하고 삭제행의 갯수를 반환하는 메소드 -->
+	<delete id="deleteAddress">
+		delete from out_address_book where ADDRESS_NO in 
+		<foreach collection="list" item="addressNo"  open="(" close=")" separator=",">		
+			#{addressNo}
+		</foreach>
+	</delete>
+	
+
+	<!-- 회원정보를 전달받아 OutAddress 테이블에 저장된 회원정보를 변경하고 변경행의 갯수를 반환하는 메소드 -->
+	<update id="updateAddress" >
+		update out_address_book set 
+			DEPT_NAME=#{deptName}, ADDRESS_NAME=#{addressName}, ADDRESS_POSITION=#{addressPosition}
+			, ADDRESS_EMAIL=#{addressEmail}, ADDRESS_PHONE=#{addressPhone}, COMPANY_NAME=#{companyName}
+			, COMPANY_PHONE=#{companyPhone}, COMPANY_ADDRESS=#{companyAddress}, MEMO=#{memo}
+		where ADDRESS_NO=#{addressNo}
+	</update>
+
+	
+
+	<!-- 검색대상과 검색키워드를 전달받아 out_address_book 테이블에 저장된 검색키워드 게시글의 갯수를 검색하여 반환하는 메소드
+		=> 검색대상이 없는 경우 BOARD 테이블에 저장된 전체 게시글의 갯수를 검색하여 반환하는 메소드
+	 -->
+	<select id="selectAddressTotal" resultType="int">
+		select count(*) from out_address_book where emp_no=#{empNo}
+		<if test="keyword!='all'">
+		<bind name="word" value="'%'+keyword+'%'"/>
+			and ${search} like #{word}
+		</if>
+	</select>
+	
+	<!-- 시작 행번호와 종료 행번호를 전달받아 out_address_book 테이블에 저장된 게시글 목록을 페이지 단위로 검색하여 반환하는 메소드
+		  => 테이블에 저장된 행에 대한 페이징 처리 -->
+	<select id="selectAddressList" resultType="OutAddressDTO">
+		select * from (select rownum rn, temp.* from (select * from out_address_book where emp_no=#{empNo}
+		<if test="keyword!='all'">
+			and ${search} like '%'||#{keyword}||'%' 
+		</if>
+		order by ADDRESS_NO) temp) where rn between #{startRow} and #{endRow}
+	</select>
+	
+
+	
+	
+</mapper>

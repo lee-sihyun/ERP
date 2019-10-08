@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<!-- 컨텍스트의 모든 자원에게 제공될 Spring Bean 에 대한 Bean Configuration File -->
+	
+	<!-- DAO 클래스 작성에 필요한 클래스들을 Spring Bean 으로 등록하기 위해 사용 -->
+	<!-- => DataSource, JdbcTemplate, SqlSessionFactory, SqlSession, TransactionManager 등 -->
+	
+	<!-- DataSource 관련 클래스를 Spring Bean 으로 등록 -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	<!-- 9.21 추가 시현  DriverSpy:드라이버를 다 가지고 있어 현재 사용할 수 있는 드라이버를 가져다가 관련로그를 가져옴-->
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@www.itwill.site:1521:xe"/>
+		<property name="username" value="finalsajo"/>
+		<property name="password" value="finalsajo"/>
+	</bean>
+			
+	<!-- SqlSessionFactory 관련 클래스를 Spring Bean 으로 등록 -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- configLocation 필드(필수) : Mybatis 환경설정 파일의 경로를 전달하여 인젝션 -->
+		<!-- => WebApplicationContext(Spring Container) 인스턴스가 읽을 수 있는 파일경로는 webapp 디렉토리의 자원만 접근 가능 -->
+		 
+		<!-- 만약 WEB-INF/spring 에다가 만들었을 경우 :
+		<property name="configLocation" value="WEB-INF/spring/mybatis-config.xml"/> -->
+		
+		<!-- classpath 네임스페이스를 이용하여 패키지 폴더에 접근 가능하도록 함 -->
+		<property name="configLocation" value="classpath:/mybatis-config.xml"/>
+		
+		<!-- dataSource 필드(필수) : DataSource 관련 Spring Bean 을 인젝션(의존성 주입,DI) -->
+		<!-- => 트랜잭션 관리를  -->
+		<property name="dataSource" ref="dataSource"/>
+		
+		<!-- typeAliasesPackage 필드 : TypeAliases기능을 제공할 패키지 경로를 인젝션 -->
+		<!-- site.itwill10.dto 에 있는 클래스들은 클래스명만 사용해도 가져와짐 -->
+		<property name="typeAliasesPackage" value="site.itwill.dto"></property>
+		
+		<!-- mapperLocations 필드(List) : Mapper 파일들의 경로를 인젝션 -->
+		<property name="mapperLocations">
+			<list>
+				<!-- 와일드 문자(*)를 이용하여 XML Mapper 파일 등록 -->
+				<!-- WebApplicationContext(Spring Container) 인스턴스는 
+				     src 및 resources 패키지 폴더에 접근 불가능하기 때문에 
+				     classpath 네임 스페이스를 이용하여 접근한다 -->
+				<value>classpath:site/itwill/mapper/*.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- SqlSession 관련 클래스를 Spring Bean 으로 등록 -->
+	<!-- destroy-method 속성의 속성값으로 clearCache 설정, close() 할 필요가 없다 -->
+	<!-- => SqlSession 관련 Spring Bean 소멸 전 clearCache() 메소드 호출 -->
+	<!-- SqlSessionTemplate.clearCache() : SqlSession 관련 Spring Bean를 제거하는 메소드 - SqlSession.close() 동일 -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" destroy-method="clearCache">
+		<!-- SqlSessionFactory 관련 Spring Bean 을 생성자를 이용하여 인젝션 -->
+		<constructor-arg ref="sqlSessionFactoryBean"/>
+	</bean>
+	
+	<!-- 9/21시현 추가 네임스페이스는 아직 추가하지 않 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	<property name="dataSource" ref="dataSource"></property>
+	
+	</bean>
+	<!-- 9/30 시현 추가  -->
+	<tx:annotation-driven/>
+	
+</beans>
+
+
+
+
+
+
+
+
+
+

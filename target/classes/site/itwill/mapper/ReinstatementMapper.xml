@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 복직 -->
+
+
+
+<mapper namespace="site.itwill.mapper.ReinstatementMapper">
+
+<insert id="insertReinstatement">
+	<selectKey resultType="int" keyProperty="draftNo" order="BEFORE">
+			select reinstatement_seq.nextval from dual
+		</selectKey>
+         
+		
+insert into reinstatement values(#{draftNo},#{empNo},#{writer},
+		sysdate,#{reinStart},#{reinEnd},#{reinDate},#{reinContent},
+		#{signerOne},0,#{signerTwo},0,#{signerThree},0,1)
+
+
+</insert>
+
+<!-- 비품구매 전체 출력 -->
+ <select id="selectReinstatement" resultType="ReinstatementDTO">
+
+
+	select * from reinstatement where emp_no=#{empNo} order by draft_no desc
+
+	</select>
+	
+	
+	<!-- 전체 문서중 상세 출력 -->
+	<select id="selectReinstatementTest" resultType="ReinstatementDTO">
+		select * from reinstatement where draft_no=#{draftNo}
+	</select>
+	
+	<!-- 처리결재함출력 -->
+	<select id="approve1" resultType="ReinstatementDTO">
+		<!--select * from draft where emp_no=#{empNo} and approve=1  -->
+			select * from reinstatement where (signer_three=#{empNo} and approve=1) 
+			or (signer_two=#{empNo} and approve=2) 
+			or (signer_one=#{empNo} and approve=3)
+			order by draft_no desc 
+	</select>
+	
+	
+		<!--반려결재함 -->
+	<select id="reject" resultType="ReinstatementDTO">
+
+		select * from reinstatement where approve=0 and emp_no=#{empNo} order by draft_no desc 
+	</select>
+
+
+		<!-- 결재  -->
+<update id="updateSignerOne">
+update reinstatement 
+set approve=
+case
+when approve=1 
+then 2
+when approve=2 
+then 3
+when approve=3
+then 4
+end
+where draft_no=#{draftNo}	</update>
+
+
+	<!-- 반려 -->
+<update id="updateApproveReturn">
+   update reinstatement 
+set approve=
+case
+when approve=1 and approve!=2 and approve!=3 and approve!=4
+then 0
+when approve=2 and approve!=3 and approve!=4 and approve!=4
+then 0
+when approve=3 and approve!=1 and approve!=2 and approve!=4
+then 0
+end
+where draft_no=#{draftNo}
+   </update>
+	
+
+	
+
+</mapper>

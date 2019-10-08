@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.CommuteMapper">
+	<!-- 출근 -->
+	<insert id="insertCommuteGo">
+		<selectKey keyProperty="commuteNo" resultType="int" order="BEFORE">
+			select commute_seq.nextval from dual
+		</selectKey>
+			insert into commute(commute_no,dept_no, emp_no, commute_status, commute_gotime) values(#{commuteNo},#{deptNo}, #{empNo}, 1, sysdate)
+	</insert>
+	
+	<!-- 퇴근 -->
+	<!-- 
+	<insert id="insertCommuteOut">
+		<selectKey keyProperty="commuteNo" resultType="int" order="BEFORE">
+			select commute_seq.nextval from dual
+		</selectKey>
+			insert into commute(dept_no, emp_no, commute_status, commute_outtime) values(#{deptNo}, #{empNo}, 2, sysdate)
+	</insert>
+	 -->
+	 
+	<!-- 출근날짜와 같은날짜에 퇴근시간이 등록되는 update -->
+	<update id="updateCommuteOut" parameterType="CommuteDTO">
+		update commute set commute_outtime = sysdate
+		where to_char(commute_gotime, 'yyyy-mm-dd') = to_char(sysdate, 'yyyy-mm-dd') and emp_no = #{empNo}
+	</update>
+	
+	<select id="selectCommute" resultType="CommuteVO" >
+		select (select emp_Name from Employee E where C.emp_No = E.emp_No) empName,
+         (select dept_Name from DepartMent D where C.dept_No = D.dept_No) deptName,
+         C.commute_gotime commute_gotime,
+         C.commute_outtime commute_outtime
+		 from Commute C where c.emp_no = #{empNo}
+	</select>
+	
+	<select id="selectAllCommute" resultType="CommuteVO">
+		select (select emp_Name from Employee E where C.emp_No = E.emp_No) empName,
+         (select dept_Name from DepartMent D where C.dept_No = D.dept_No) deptName,
+         C.commute_gotime commute_gotime,
+         C.commute_outtime commute_outtime
+		 from Commute C
+	</select>
+	
+	<!-- 출근 정보를 알기 위한 select문 -->
+	<select id="selectGotimeUser" resultType="CommuteDTO">
+		select * from commute where emp_no = #{empNo} and to_char(commute_gotime, 'yyyymmdd') = to_char(sysdate, 'yyyymmdd') 
+	</select>
+	
+	<select id="selectOuttimeUser" resultType="CommuteDTO">
+		select * from commute where emp_no = #{empNo} and to_char(commute_outtime, 'yyyymmdd') = to_char(sysdate, 'yyyymmdd') 
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+

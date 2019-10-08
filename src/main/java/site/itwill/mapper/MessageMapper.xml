@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.MessageMapper">
+	<!--
+	<resultMap type="MessageDTO" id="MessageDTOResultMap">
+		<id column="MSG_NO" property="msgNo"/>
+		<result column="RECV_EMP_NO" property="recvEmpNo"/>
+		<result column="SEND_EMP_NO" property="sendEmpNo"/>
+		<result column="SEND_DATE" property="sendDate"/>
+		<result column="MSG_STATE" property="msgState"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+	</resultMap>
+	 -->
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 사원목록에서 보내는 사람 검색 -->
+	
+	<!-- 주소록 전체 검색 -->
+	<select id="searchAllAddress" resultType="MessageDTO">
+		select department.dept_no,department.dept_name,employee.emp_no,employee.emp_name,employee.emp_position from employee full outer join department 
+		on employee.dept_no=department.dept_no order by emp_no
+	</select>
+	
+	<!-- 주소록에서 선택한 사람 저장 -->
+	<select id="selectAddress" resultType="MessageDTO">
+		select * from employee where emp_no in
+			<foreach collection="list" item="empNo"  open="(" close=")" separator=",">
+				#{empNo}
+			</foreach>
+	</select>
+	
+	<!-- <select id="searchAddress" resultType="MessageDTO">
+		select * from 
+    	(select rownum rn, temp.* from
+        (select department.dept_name, employee.emp_no, employee.emp_name from employee full outer join department 
+		on employee.dept_no=department.dept_no 
+		<if test="keyword!='all'">
+			where ${search} like '%'||{keyword}||'%' 
+		</if>
+		order by emp_no) temp) where rn between #{startRow} and #{endRow}
+	</select> -->
+	
+	<!-- ================================================================================================================= -->
+
+	<!-- 쪽지보내기-2 -->
+	<!-- 입력 :  보내는 사람, 제목, 내용 -->
+	<!-- 자동입력 : 날짜, 상태(1:받은쪽지함(기본)/2:쪽지보관함) -->
+	<insert id="sendMsg" parameterType="MessageDTO">
+		<selectKey resultType="int" keyProperty="msgNo" order="BEFORE">
+			select message_seq.nextval from dual
+		</selectKey>
+		insert into message values(#{msgNo},#{recvEmpNo},#{sendEmpNo},sysdate,1,#{title},#{content})
+		
+	</insert>
+
+	<!-- ================================================================================================================= -->
+	
+	<!-- 받은 쪽지함 -->
+	<!-- 받는 사람 사원번호와 로그인한 사원번호가 같고 상태번호가 1인 경우 반환 -->
+	<!-- emp테이블,message테이블,department테이블 3개 조인 -->
+	<select id="recvMsgBox" resultType="MessageDTO">
+		select 
+		message.msg_no, 
+		
+		message.send_emp_no,
+		department.dept_no as sendDeptNo,
+		department.dept_name as sendDeptName,
+		employee.emp_position as sendEmpPosition,
+		employee.emp_name as sendEmpName, 
+		
+		message.recv_emp_no, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		
+		from message 
+		full outer join employee on message.send_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where recv_emp_no = #{logNo} and msg_state=1 order by send_Date desc
+	</select>
+	
+	
+	
+	<!-- 보낸 쪽지함 -->
+	<!-- 보낸 사람 사원번호와 로그인한 사원번호가 같은 경우 반환 -->
+	<select id="sendMsgBox" resultType="MessageDTO">
+		select 
+		
+		message.msg_no, 
+		
+		message.recv_emp_no,
+		department.dept_no as recvDeptNo,
+		department.dept_name as recvDeptName ,
+		employee.emp_position as recvEmpPosition,
+		employee.emp_name as recvEmpName, 
+		
+		message.send_emp_no, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		from message 
+		full outer join employee on message.recv_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where send_emp_no = #{logNo} and msg_state=1 order by send_Date desc
+	</select>
+
+
+
+	<!-- 쪽지 보관함 -->
+	<!-- 받은 메세지 중에 메세지상태번호가 2번인 경우 반환 -->
+	<select id="myMsgBox" resultType="MessageDTO">
+		select 
+		message.msg_no, 
+		message.recv_emp_no,
+		
+		message.send_emp_no, 
+		department.dept_no as sendDeptNo,
+		department.dept_name as sendDeptName,
+		employee.emp_position as sendEmpPosition,
+		employee.emp_name as sendEmpName, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		from message 
+		full outer join employee on message.send_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where recv_emp_no = #{logNo} and msg_state=2 order by send_Date desc
+	
+	</select>
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 받은쪽지내용확인-detail -->
+	<select id="recvMsgView" resultType="MessageDTO">
+		select 
+		message.msg_no, 
+		message.recv_emp_no,
+		
+		message.send_emp_no, 
+		department.dept_no as sendDeptNo,
+		department.dept_name as sendDeptName,
+		employee.emp_position as sendEmpPosition,
+		employee.emp_name as sendEmpName, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		from message 
+		full outer join employee on message.send_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where msg_no=#{msgNo}
+	</select>
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 보낸쪽지내용확인-detail -->
+	<select id="sendMsgView" resultType="MessageDTO">
+		select 
+		
+		message.msg_no, 
+		
+		message.recv_emp_no,
+		department.dept_no as recvDeptNo,
+		department.dept_name as recvDeptName ,
+		employee.emp_position as recvEmpPosition,
+		employee.emp_name as recvEmpName, 
+		
+		message.send_emp_no, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		from message 
+		full outer join employee on message.recv_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where msg_no=#{msgNo}
+	</select>
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 받은 쪽지함에서 체크 후 답장 누르면 바로 답장하기 -->
+	<select id="replyMessageList" resultType="MessageDTO">
+		select 
+		message.msg_no, 
+		message.recv_emp_no,
+		
+		message.send_emp_no, 
+		department.dept_no as sendDeptNo,
+		department.dept_name as sendDeptName,
+		employee.emp_position as sendEmpPosition,
+		employee.emp_name as sendEmpName, 
+		
+		
+		message.send_date, 
+		message.title, 
+		message.content, 
+		message.msg_state 
+		from message 
+		full outer join employee on message.send_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where msg_no=#{msgNo}
+	</select>
+	<!-- ================================================================================================================= -->
+	
+	<!-- 비완성 
+		받은 쪽지함에서 쪽지보관함으로 이동(state 1 => 2로 변경) recv_emp_no= #{recvEmpNo} or send_emp_no = 3 -->
+	<!-- 보낸 사람 사원번호 또는 받은 사람 사원번호가 로그인 아이디와 같은 경우 2로 변경 -->
+	<update id="moveMsgBox">
+		update message set msg_state=2 where msg_no in
+		<foreach collection="list" item="msgNo"  open="(" close=")" separator=",">
+		#{msgNo}
+		</foreach>
+	</update>
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 쪽지 삭제 -->
+	<!-- 전달받은 쪽지 번호를 삭제 -->
+	<delete id="deleteMsg">
+		delete from message where msg_no in
+		<foreach collection="list" item="msgNo"  open="(" close=")" separator=",">
+		#{msgNo}
+		</foreach>
+	</delete>
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 비완성
+		받은 쪽지함 쪽지 갯수 반환 -->
+	<!-- 받은사람 사원번호와 로그인 사원번호가 같고 상태번호가 1인 경우 카운트 -->
+	<select id="countRecvMsg" resultType="int">
+		select count(*) from message where recv_emp_no=#{empNo} and msg_state=1
+	</select>
+	
+	
+	
+	<!-- 받은 쪽지함 페이징 처리 -->
+	<select id="PageRecvMsg" resultType="MessageDTO">
+	select *
+	from (select rownum rn, temp.* from 
+	        (select
+	            msg_no, 
+	            recv_emp_no, 
+	            send_emp_no,
+	            
+	            emp_name as send_emp_name, 
+	            emp_position as send_emp_position,
+	            dept_name as send_dept_name,
+	            e.dept_no as send_dept_no,
+	            
+	            send_date, 
+	            msg_state, 
+	            title, 
+	            content
+	         from message m
+			 full outer join employee e on m.send_emp_no = e.emp_no
+			 full outer join department d on e.dept_no = d.dept_no 
+			 where recv_emp_no=#{log_no} and msg_state=1 order by msg_no desc) 
+		  temp) 
+	where rn between #{startRow} and #{endRow}
+	</select>
+	
+	
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 보낸 쪽지함 쪽지 갯수 반환 -->
+	<!-- 보낸사람 사원번호와 로그인 사원번호가 같고 상태번호가 1인 경우 카운트 -->
+	<select id="countSendMsg" resultType="int">
+		select count(*) from message where send_id=#{log_no} and msg_state=2 
+	</select>
+
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 쪽지 보관함 쪽지 갯수 반환 -->
+	<!-- 상태번호가 2인 경우 카운트 -->
+	<select id="countMyMsgBox" resultType="int">
+		select count(*) from message where msg_state=2
+	</select>
+	
+	
+	
+	<!-- ================================================================================================================= -->
+	
+	<!-- 전체 검색 -->
+	<select id="allSearchMsg" resultType="int">
+		select count(*) from member order by msg_no desc
+	</select>
+	
+	<!-- 나의쪽지함 페이징 처리 -->
+	<select id="PageMyMsgBox" resultType="MessageDTO">
+		select * from (select rownum rn, temp.* from (select * from message order by msg_no desc) temp) 
+		where rn between ? and ? and msg_state=3 order by msg_no desc
+	</select>
+	
+	<!-- ================================================================================================================= -->
+	
+	
+	<!-- 보낸 쪽지함 검색 -->
+	<select id="selectSendMsgTotal" resultType="int">
+		select count(*) from message 
+		full outer join employee on message.recv_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where send_emp_no = #{logNo} and msg_state=1 
+		<if test="keyword!='all'">
+		<bind name="word" value="'%'+keyword+'%'"/>
+			and ${search} like #{word}
+		</if>
+		order by send_Date desc
+	</select>
+	 
+	
+	
+	<!-- 보낸 쪽지함 페이징 처리 -->
+	<select id="PageSendMsg" resultType="MessageDTO">
+		select * from 
+		(select rownum rn, temp.* from 
+		(select * from message 
+		full outer join employee on message.recv_emp_no = employee.emp_no  
+		full outer join department on employee.dept_no = department.dept_no 
+		where send_emp_no = #{logNo} and msg_state=1 
+		<!-- <if test="keyword!='all'">
+			and ${search} like '%'||#{keyword}||'%'
+		</if> -->
+		order by msg_no) temp) where rn between #{startRow} and #{endRow}
+	</select>
+	
+	
+	<!-- ================================================================================================================= -->
+	
+	<select id="replyEmpNo" resultType="MessageDTO">
+		select send_emp_no from message where msg_no=#{msgNo}	
+	</select>
+
+
+
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.EmpMapper">
+	
+	<insert id="insertEmp" >
+		<!-- <selectKey resultType="int" keyProperty="empNo" order="BEFORE">
+		 	select to_char(sysdate,'YY')||lpad((select dept_no from department where dept_no=#{deptNo}),2,0) 
+    	||LPAD(employee_seq_${deptNo}.nextval,2,0) from dual
+		</selectKey> -->
+		insert into employee values(
+		#{empNo},#{deptNo},#{empPosition},#{empName},#{password},#{empManager},#{extension},#{empPhone}
+		,#{empAddress},#{empEmail},#{empState},#{empBreak},#{memo})
+	</insert>
+	
+	<select id="selectSeq" resultType="int">
+		select to_char(sysdate,'YY')||lpad((select dept_no from department where dept_no=#{deptNo}),2,0) 
+    	||LPAD(employee_seq_${deptNo}.nextval,2,0) from dual
+	</select>
+	<!-- 아이디를 전달받아 employee 테이블에 저장된 사원정보를 검색하여 반환하는 메소드 -->
+	<select id="selectEmp" resultType="EmployeeDTO" >
+		select * from employee e JOIN department d on e.dept_no=d.dept_no where emp_no=#{empNo}
+	</select>
+	
+	<delete id="deleteEmp" >
+		delete from employee where dept_no=2 and EMP_NO in  <!-- 확실하지 않음 -->
+		<foreach collection="list" item="empNo" open="(" close=")" separator=",">		
+			#{empNo}
+		</foreach>
+	</delete>
+	
+	
+	<!-- 회원정보를 전달받아 MEMBER 테이블에 저장된 회원정보를 변경하고 변경행의 갯수를 반환하는 메소드 -->
+	<update id="updateEmp" >
+		update employee set 
+			DEPT_NO=#{deptNo}, EMP_POSITION=#{empPosition}, EMP_NAME=#{empName}, PASSWORD=#{password}
+			, EMP_MANAGER=#{empManager}, EXTENSION=#{extension}, EMP_PHONE=#{empPhone}, EMP_ADDRESS=#{empAddress}
+			, EMP_EMAIL=#{empEmail}, EMP_STATE=#{empState}, EMP_BREAK=#{empBreak}
+		where EMP_NO=#{empNo}
+	</update>
+	<!-- 	
+
+    EMP_NO       NOT NULL NUMBER         사원번호
+	DEPT_NO      NOT NULL NUMBER         사원부서코드
+	EMP_POSITION NOT NULL VARCHAR2(20)   사원직급
+	EMP_NAME     NOT NULL VARCHAR2(20)   사원이름
+	PASSWORD     NOT NULL VARCHAR2(1000) 비밀번호
+	EMP_MANAGER           VARCHAR2(20)   팀장확인값
+	EXTENSION    NOT NULL VARCHAR2(20)   내선번호
+	EMP_PHONE    NOT NULL VARCHAR2(20)   사원휴대폰
+	EMP_ADDRESS  NOT NULL VARCHAR2(50)   사원주소
+	EMP_EMAIL    NOT NULL VARCHAR2(20)   사원이메일
+	EMP_STATE    NOT NULL VARCHAR2(20)   재직상태
+	EMP_BREAK             NUMBER           연차
+	 -->
+	 
+	<!-- 아이디와 상태를 전달받아 employee 테이블에 저장된 사원정보 중 재직상태를 변경하고 변경행의 갯수를 반환하는 메소드 -->
+	<!-- 결제완료시 자동으로 변경 -->
+	<update id="updateEmpStatus" >
+		update employee set EMP_STATE=#{empState} where emp_no=#{empNo}
+	</update>
+	
+	<!-- 시작 행번호와 종료 행번호를 전달받아 out_address_book 테이블에 저장된 게시글 목록을 페이지 단위로 검색하여 반환하는 메소드
+		  => 테이블에 저장된 행에 대한 페이징 처리 -->
+	<select id="selectEmpList" resultType="EmployeeDTO" >
+		select * from 
+    	(select rownum rn, temp.* from
+        (select emp_no,e.dept_no dept_no ,emp_position,emp_name,password,emp_manager
+        ,extension,emp_phone,emp_address,emp_email,emp_state,emp_break,memo,dept_name
+        from employee e JOIN department d on e.dept_no=d.dept_no
+		<if test="keyword!='all'">
+			where ${search} like '%'||#{keyword}||'%'
+		</if>
+		order by emp_no) temp) where rn between #{startRow} and #{endRow}
+	</select>
+	
+	
+	<select id="selectInaddressList" resultType="EmployeeDTO" >
+		select * from 
+    	(select rownum rn, temp.* from
+        (select emp_no,e.dept_no dept_no ,emp_position,emp_name,password,emp_manager
+        ,extension,emp_phone,emp_address,emp_email,emp_state,emp_break,memo,dept_name
+        from employee e JOIN department d on e.dept_no=d.dept_no where not emp_state in '퇴직'
+		<if test="keyword!='all'">
+			and ${search} like '%'||#{keyword}||'%'
+		</if>
+		order by emp_no) temp) where rn between #{startRow} and #{endRow}
+	</select>
+	
+	
+	
+	<!-- 검색대상과 검색키워드를 전달받아 out_address_book 테이블에 저장된 검색키워드 게시글의 갯수를 검색하여 반환하는 메소드
+		=> 검색대상이 없는 경우 BOARD 테이블에 저장된 전체 게시글의 갯수를 검색하여 반환하는 메소드
+	 -->
+	<select id="selectEmpTotal" resultType="int">
+		select count(*) from employee e JOIN department d on e.dept_no=d.dept_no
+		<if test="keyword!='all'">
+		<bind name="word" value="'%'+keyword+'%'"/>
+			where ${search} like #{word}
+		</if>
+	</select>
+	<select id="selectInaddressTotal" resultType="int">
+		select count(*) from employee e JOIN department d on e.dept_no=d.dept_no where not emp_state in '퇴직'
+		<if test="keyword!='all'">
+		<bind name="word" value="'%'+keyword+'%'"/>
+			and ${search} like #{word}
+		</if>
+	</select>
+	
+	<select id="selectDeptName" resultType="String">
+		select dept_name from employee e join department d on e.dept_no=d.dept_no where emp_no=#{empNo}
+	</select>
+	
+	
+</mapper>

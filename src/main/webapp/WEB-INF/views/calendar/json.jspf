@@ -1,0 +1,18 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<link href='${pageContext.servletContext.contextPath }/assets/plugins/fullcalendar/fullcalendar/fullcalendar.css' rel='stylesheet' />
+<link href='${pageContext.servletContext.contextPath }/assets/plugins/fullcalendar/fullcalendar/fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='${pageContext.servletContext.contextPath }/assets/plugins/fullcalendar/lib/jquery.min.js'></script>
+<script src='${pageContext.servletContext.contextPath }/assets/plugins/fullcalendar/lib/jquery-ui.custom.min.js'></script>
+<script src='${pageContext.servletContext.contextPath }/assets/plugins/fullcalendar/fullcalendar/fullcalendar.js'></script>
+<script>
+	$(function() {
+		$('#calendar').fullCalendar({
+			eventDrop: function(event, delta) {
+				alert(event.title + ' was moved ' + delta + ' days\n' +
+					'(should probably update your database)');
+			}
+		});
+	});
+</script>
+

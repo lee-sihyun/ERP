@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.itwill.mapper.DraftMapper">
+		<!-- 기안 작성생성 -->
+	
+	<insert id="insertDraft">
+
+<selectKey resultType="int" keyProperty="draftNo" order="BEFORE">
+			select draft_seq.nextval from dual
+		</selectKey>
+		insert into draft values(#{draftNo},#{empNo}
+		,#{writer},sysdate,#{draftTitle},#{draftContent}
+		,#{signerOne},0,#{signerTwo},0,#{signerThree},0,1)
+
+	</insert>
+	<!-- 기안 전체 출력 -->
+	<select id="selectDraft" resultType="DraftDTO">
+
+
+		select * from draft where emp_no=#{empNo} order by draft_no desc
+
+	</select>
+	
+	
+	<!-- 하나만 출력  9/30 테스트 -->
+
+	
+	<select id="selectDraftTest" resultType="DraftDTO">
+		select * from draft where draft_no=#{draftNo}
+	</select>
+	
+	
+	
+	
+	<!-- 처리결재함 10/3 테스트  -->
+		
+		<!-- approve!=3 and approve!=4 and approve!=1 -->
+	<select id="approve1" resultType="DraftDTO">
+		<!--select * from draft where emp_no=#{empNo} and approve=1  -->
+		select * from draft where (signer_three=#{empNo} and approve=1) 
+		or (signer_two=#{empNo} and approve=2) 
+		or (signer_one=#{empNo} and approve=3)
+		order by draft_no desc 
+	</select>
+	<!-- approve!=0 and approve!=4 -->
+<!--  approve=1 or approve=2 or approve=3 -->
+	
+	<!-- 반려결재함 -->
+	<select id="reject" resultType="DraftDTO">
+		<!--select * from draft where emp_no=#{empNo} and approve=1  -->
+		select * from draft where approve=0 and emp_no=#{empNo} order by draft_no desc 
+	</select>
+
+	
+	
+	
+	
+	<!-- 결재라인1 결재승인 -->
+	<update id="updateSignerOne">
+
+	
+update draft 
+set approve=
+case
+when approve=1 
+then 2
+when approve=2 
+then 3
+when approve=3
+then 4
+end
+where draft_no=#{draftNo}
+	
+	
+
+	</update>
+
+	
+
+	
+
+
+	<!-- 반려 -->
+	  <update id="updateApproveReturn">
+   update draft 
+set approve=
+case
+when approve=1 and approve!=2 and approve!=3 and approve!=4
+then 0
+when approve=2 and approve!=3 and approve!=4 and approve!=4
+then 0
+when approve=3 and approve!=1 and approve!=2 and approve!=4
+then 0
+end
+where draft_no=#{draftNo}
+   </update>
+   
+   
+
+
+<!-- 이거 퇴사 일에 맞게 해야함 -->
+<update id="shyun" >
+
+update employee set emp_state ='퇴사' where emp_no=#{empNo}   
+
+</update>
+
+
+
+</mapper>
+
+

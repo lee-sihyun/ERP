@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<!-- definition : 템플릿 페이지를 설정하기 위한 상위 엘리먼트 -->
+	<!-- name 속성 : 요청처리 메소드에서 템플릿 페이지를 불러오기 위한 고유값을 속성값으로 설정 -->
+	<!-- => 요청처리 메소드의 반환값(ViewName)으로 name 속성값 사용 -->
+	<!-- template 속성 : 템플릿 페이지에 대한 JSP 문서 경로를 속성값으로 설정 -->
+	<definition name="index" template="/WEB-INF/views/layout/template.jsp">
+		<!-- put-attribute : 템플릿 페이지를 구성하기 위한 뷰페이지(JSP 문서)를 설정하는 엘리먼트 -->
+		<!-- name 속성 : 템플릿 페이지에서 뷰페이지를 불러오기 위한 고유값을 속성값으로 설정 -->
+		<!-- value 속성 : 뷰페이지에 대한 JSP 문서 경로를 속성값으로 설정 -->
+		<put-attribute name="header" value="/WEB-INF/views/layout/header.jsp"/>
+		<put-attribute name="sidebar" value="/WEB-INF/views/layout/sidebar.jsp"/>
+		<put-attribute name="content" value="/WEB-INF/views/layout/main.jsp"/>
+		<put-attribute name="footer" value="/WEB-INF/views/layout/footer.jsp"/>
+	</definition>
+	
+	<!-- name 속성값을 *로 설정한 경우 요청처리 메소드의 반환값이 "문자열" 
+	형식인 경우 템플릿 페이지로 응답되도록 설정 -->
+	<!-- extends 속성 : 다른 definition 엘리먼트의 고유값을 속성값으로 설정  -->
+	<!-- => 템플릿 페이지 정보를 상속받아 사용할 수 있는 기능 -->
+<!-- 	<definition name="*" extends="index">
+		put-attribute 엘리먼트의 name 속성값이 중복될 경우 포함될 JSP 문서 변경
+		definition 엘리먼트의 name 속성값의 * 모양을 대신 put-attribute
+		엘리먼트의 value 속성값에서는 {정수}로 표현 - 정수는 1부터 1씩 증가
+		=> 요청처리 메소드의 반환값(ViewName)을 템플릿 페이지에 포함되는 JSP 문서로 변환
+		<put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+	</definition>
+	 -->
+	<!-- 요청처리 메소드의 반환값이 "문자열/문자열" 형식인 경우 템플릿 페이지로 응답되도록 설정 -->
+	<definition name="*/*" extends="index">
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+	</definition>
+	
+	<definition name="*/*/*" extends="index">
+		<put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+	</definition>			
+</tiles-definitions>

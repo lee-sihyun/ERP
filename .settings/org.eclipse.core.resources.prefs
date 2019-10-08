@@ -1,0 +1,4 @@
+eclipse.preferences.version=1
+encoding//src/main/java/site/itwill/controller/DraftConroller.java=UTF-8
+encoding//src/main/webapp/WEB-INF/views/draft/draft_input.jsp=UTF-8
+encoding//src/test/java/site/itwill/controller/DraftServiceTest.java=UTF-8
