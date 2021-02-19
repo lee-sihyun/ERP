@@ -1,2 +1,1 @@
-# ERP
-I was in charge of Approval. Approval and return were implemented and the documents were forwarded to the ID (employee number) to be approved by the subordinate so that the senior staff could proceed. Always thank you for your feedback.
+
